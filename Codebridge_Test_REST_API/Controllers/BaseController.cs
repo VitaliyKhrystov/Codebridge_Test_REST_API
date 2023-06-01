@@ -1,12 +1,9 @@
 ﻿using Codebridge_Test_REST_API.Domain.Enteties;
-using Codebridge_Test_REST_API.Domain.Repositories;
 using Codebridge_Test_REST_API.Domain.Repositories.Abstract;
-using Microsoft.AspNetCore.Http;
+using Codebridge_Test_REST_API.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+
 
 namespace Codebridge_Test_REST_API.Controllers
 {
@@ -23,24 +20,81 @@ namespace Codebridge_Test_REST_API.Controllers
             this.logger = logger;
         }
 
+        // curl -X GET https://localhost/ping   
         [HttpGet ("ping")]
         public IActionResult Ping() 
         {
             return Ok("Dogs house service. Version 1.0.1");
         }
 
+        // curl -X GET https://localhost/dogs
+        // curl -X GET http://localhost/dogs?attribute=weight&order=desc
+        // curl -X GET http://localhost/dogs?pageNumber=1&pageSize=2
+        // curl -X GET https://localhost:44336/dogs?attribute=name&order=asc&pageNumber=1&pageSize=3
         [HttpGet("dogs")]
-        public async Task<ActionResult<IEnumerable<Dog>>> Get(string? attribute, string? order, int? pageNumber, int? pageSize)
+        public async Task<ActionResult<IEnumerable<Dog>>> GetGogs(string? attribute, string? order, int? pageNumber, int? pageSize)
         {
-            var dogs = await dogRepository.GetAllDogsAsync();
+            try
+            {
+                var dogs = await dogRepository.GetAllDogsAsync();
 
-            if (dogs == null)
-                return Ok("The list of dogs is empty!");
+                if (dogs == null)
+                    return Ok("The list is empty!");
 
-            dogs = Sorting(dogs, attribute, order);
-            dogs = Paging(dogs, pageNumber, pageSize);
+                dogs = Sorting(dogs, attribute, order);
+                dogs = Paging(dogs, pageNumber, pageSize);
 
-            return Ok(dogs);
+                return Ok(dogs.ToList());
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message);
+                return BadRequest();
+            }
+            
+        }
+
+        //curl -X POST https://localhost/dog -H 'Content-Type: application/json' -d '{"Name": "Don", "Color": "Brown", "Tail_Length": 17, "Weight": 10}'
+        [HttpPost ("dog")]
+        public async Task<IActionResult> CreateDog(DogModel dogModel)
+        {
+            if (await dogRepository.GetDogByNameAsync(dogModel.Name) != null)
+            {
+                ModelState.AddModelError("", "The dog with the same name already exists in DB!");
+            }
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var dog = new Dog()
+                    { 
+                        Name = dogModel.Name,
+                        Color= dogModel.Color,
+                        Tail_Length= dogModel.Tail_Length,
+                        Weight= dogModel.Weight
+                    };
+
+                    await dogRepository.CreateDogAsync(dog);
+                    return Ok("The dog has been created!");
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex.Message);
+                    return BadRequest();
+                }
+            }
+            else
+            {
+                var list = new List<ModelError>();
+                foreach (var modelState in ModelState.Values)
+                {
+                    foreach (ModelError error in modelState.Errors)
+                    {
+                        list.Add(error);
+                    }
+                }
+                return BadRequest(list);
+            }
         }
 
         protected IEnumerable<Dog> Sorting(IEnumerable<Dog> list, string? attribute, string? order)
@@ -107,12 +161,5 @@ namespace Codebridge_Test_REST_API.Controllers
 
         }
 
-
-
-        //var isAttributeName = dogs.First().GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-        //                               .Any(d => d.Name.Substring(d.Name.IndexOf('<') + 1, d.Name.IndexOf('>') - 1).ToLower() == attribute.ToLower());
-
-        //var attributeName = isAttributeName ? attribute : null;
-        //var orderBy = order.IsNullOrEmpty() || order.ToLower() == "desc" ? order : "asc";
     }
 }

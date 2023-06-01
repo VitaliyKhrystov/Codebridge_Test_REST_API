@@ -1,7 +1,6 @@
 ﻿using Codebridge_Test_REST_API.Domain.Enteties;
 using Codebridge_Test_REST_API.Domain.Repositories.Abstract;
 using Microsoft.EntityFrameworkCore;
-using System.Data;
 
 namespace Codebridge_Test_REST_API.Domain.Repositories
 {
