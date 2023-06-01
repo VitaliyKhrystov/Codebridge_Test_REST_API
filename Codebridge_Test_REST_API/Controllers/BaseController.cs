@@ -20,16 +20,16 @@ namespace Codebridge_Test_REST_API.Controllers
             this.logger = logger;
         }
 
-        // curl -X GET https://localhost/ping   
+        // curl -X GET https://localhost:44336/ping   
         [HttpGet ("ping")]
         public IActionResult Ping() 
         {
             return Ok("Dogs house service. Version 1.0.1");
         }
 
-        // curl -X GET https://localhost/dogs
-        // curl -X GET http://localhost/dogs?attribute=weight&order=desc
-        // curl -X GET http://localhost/dogs?pageNumber=1&pageSize=2
+        // curl -X GET https://localhost:44336/dogs
+        // curl -X GET http://localhost:44336/dogs?attribute=weight&order=desc
+        // curl -X GET http://localhost:44336/dogs?pageNumber=1&pageSize=2
         // curl -X GET https://localhost:44336/dogs?attribute=name&order=asc&pageNumber=1&pageSize=3
         [HttpGet("dogs")]
         public async Task<ActionResult<IEnumerable<Dog>>> GetGogs(string? attribute, string? order, int? pageNumber, int? pageSize)
@@ -54,7 +54,7 @@ namespace Codebridge_Test_REST_API.Controllers
             
         }
 
-        //curl -X POST https://localhost/dog -H 'Content-Type: application/json' -d '{"Name": "Don", "Color": "Brown", "Tail_Length": 17, "Weight": 10}'
+        //curl -X POST https://localhost:44336/dog -H 'Content-Type: application/json' -d '{"Name": "Don", "Color": "Brown", "Tail_Length": 17, "Weight": 10}'
         [HttpPost ("dog")]
         public async Task<IActionResult> CreateDog(DogModel dogModel)
         {
@@ -66,15 +66,9 @@ namespace Codebridge_Test_REST_API.Controllers
             {
                 try
                 {
-                    var dog = new Dog()
-                    { 
-                        Name = dogModel.Name,
-                        Color= dogModel.Color,
-                        Tail_Length= dogModel.Tail_Length,
-                        Weight= dogModel.Weight
-                    };
-
+                    var dog = new Dog().FromDTO(dogModel);
                     await dogRepository.CreateDogAsync(dog);
+
                     return Ok("The dog has been created!");
                 }
                 catch (Exception ex)
