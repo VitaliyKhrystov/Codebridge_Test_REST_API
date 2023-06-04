@@ -37,6 +37,7 @@ namespace Codebridge_Test_REST_API
             app.UseRateLimiter();
 
             app.Run();
-        }
+
+    }
     }
 }
