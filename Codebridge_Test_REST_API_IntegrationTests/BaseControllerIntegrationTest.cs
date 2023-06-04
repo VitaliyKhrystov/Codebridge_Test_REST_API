@@ -1,12 +1,9 @@
 using Codebridge_Test_REST_API;
 using Codebridge_Test_REST_API.Models;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Newtonsoft.Json;
 using System.Net;
 using System.Text;
-using System.Web.Http;
 using Xunit;
 
 namespace Codebridge_Test_REST_API_IntegrationTests
@@ -59,6 +56,21 @@ namespace Codebridge_Test_REST_API_IntegrationTests
             Assert.Equal(message, errorMessage.First());
         }
 
+        [Fact]
+        public async Task CreateDogAsync_CheckStatusCreateItemAddToDB_ShouldReturnStatusOk_GetMessageCreatedItem()
+        {
+            //Arrange
+            var client = factory.CreateClient();
+            var message = "The dog has been created!";
+            var dog = new DogDTO() { Name = GetRandomName(), Color = "yellow", Tail_Length = 12, Weight = 15 };
+
+            //Act
+            var response = await client.PostAsync("/dog", new StringContent(JsonConvert.SerializeObject(dog), Encoding.UTF8, "application/json"));
+
+            // Assert
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal(message, await response.Content.ReadAsStringAsync());
+        }
 
         [Fact]
         public async Task CreateDogAsync_SendEmptyColorForModelDogDTO_ShouldReturnStatusBadRequest_ErrorMessage()
@@ -118,6 +130,21 @@ namespace Codebridge_Test_REST_API_IntegrationTests
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             Assert.Equal(message, errorMessage.First());
 
+        }
+
+        private string GetRandomName()
+        {
+            var random = new Random();
+            var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "abcdefghijklmnopqrstuvwxyz";
+            var length = random.Next(3,11);
+            var name = new StringBuilder();
+
+            for (int i = 0; i < length; i++)
+            {
+                name.Append(alphabet[random.Next(alphabet.Length)]);
+            }
+
+            return name.ToString();
         }
     }
 }

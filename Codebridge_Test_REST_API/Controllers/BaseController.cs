@@ -31,8 +31,8 @@ namespace Codebridge_Test_REST_API.Controllers
         }
 
         // curl -X GET https://localhost:44336/dogs
-        // curl -X GET http://localhost:44336/dogs?attribute=weight&order=desc
-        // curl -X GET http://localhost:44336/dogs?pageNumber=1&pageSize=2
+        // curl -X GET https://localhost:44336/dogs?attribute=weight&order=desc
+        // curl -X GET https://localhost:44336/dogs?pageNumber=1&pageSize=2
         // curl -X GET https://localhost:44336/dogs?attribute=name&order=asc&pageNumber=1&pageSize=3
         [HttpGet("dogs")]
         public async Task<ActionResult<IEnumerable<Dog>>> GetDogsAsync(string? attribute, string? order, int? pageNumber, int? pageSize)

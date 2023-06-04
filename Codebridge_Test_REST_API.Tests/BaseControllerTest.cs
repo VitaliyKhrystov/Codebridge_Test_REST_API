@@ -72,7 +72,7 @@ namespace Codebridge_Test_REST_API.Tests
         {
             //Arrange
             var list = await GetDogsTestAsync();
-            var dogWithSmallestWeightTest = list.OrderByDescending(d => d.Weight).First();
+            var dogWithHighestWeightTest = list.OrderByDescending(d => d.Weight).First();
             repository.Setup(repository => repository.GetAllDogsAsync()).Returns(GetDogsTestAsync());
             BaseController baseController = new BaseController(repository.Object, logger.Object, mapper.Object);
 
@@ -83,7 +83,7 @@ namespace Codebridge_Test_REST_API.Tests
             //Assert
             Assert.IsType<OkObjectResult>(result);
             var dogList = result.Value as List<Dog>;
-            dogList?.First().Should().BeEquivalentTo(dogWithSmallestWeightTest, options => options.ComparingByMembers<Dog>());
+            dogList?.First().Should().BeEquivalentTo(dogWithHighestWeightTest, options => options.ComparingByMembers<Dog>());
         }
 
     
