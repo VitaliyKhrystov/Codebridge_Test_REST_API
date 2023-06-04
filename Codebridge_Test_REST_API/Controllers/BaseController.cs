@@ -1,4 +1,5 @@
-﻿using Codebridge_Test_REST_API.Domain.Enteties;
+﻿using AutoMapper;
+using Codebridge_Test_REST_API.Domain.Enteties;
 using Codebridge_Test_REST_API.Domain.Repositories.Abstract;
 using Codebridge_Test_REST_API.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -13,11 +14,13 @@ namespace Codebridge_Test_REST_API.Controllers
     {
         private readonly IDogRepository dogRepository;
         private readonly ILogger<BaseController> logger;
+        private readonly IMapper mapper;
 
-        public BaseController(IDogRepository dogRepository, ILogger<BaseController> logger)
+        public BaseController(IDogRepository dogRepository, ILogger<BaseController> logger, IMapper mapper)
         {
             this.dogRepository = dogRepository;
             this.logger = logger;
+            this.mapper = mapper;
         }
 
         // curl -X GET https://localhost:44336/ping   
@@ -32,7 +35,7 @@ namespace Codebridge_Test_REST_API.Controllers
         // curl -X GET http://localhost:44336/dogs?pageNumber=1&pageSize=2
         // curl -X GET https://localhost:44336/dogs?attribute=name&order=asc&pageNumber=1&pageSize=3
         [HttpGet("dogs")]
-        public async Task<ActionResult<IEnumerable<Dog>>> GetGogs(string? attribute, string? order, int? pageNumber, int? pageSize)
+        public async Task<ActionResult<IEnumerable<Dog>>> GetDogsAsync(string? attribute, string? order, int? pageNumber, int? pageSize)
         {
             try
             {
@@ -44,7 +47,7 @@ namespace Codebridge_Test_REST_API.Controllers
                 dogs = Sorting(dogs, attribute, order);
                 dogs = Paging(dogs, pageNumber, pageSize);
 
-                return Ok(dogs.ToList());
+                return Ok(dogs.Select(d => mapper.Map<DogDTO>(d)));
             }
             catch (Exception ex)
             {
@@ -56,17 +59,17 @@ namespace Codebridge_Test_REST_API.Controllers
 
         //curl -X POST https://localhost:44336/dog -H 'Content-Type: application/json' -d '{"Name": "Don", "Color": "Brown", "Tail_Length": 17, "Weight": 10}'
         [HttpPost ("dog")]
-        public async Task<IActionResult> CreateDog(DogModel dogModel)
+        public async Task<IActionResult> CreateDogAsync(DogDTO newDog)
         {
-            if (await dogRepository.GetDogByNameAsync(dogModel.Name) != null)
+            if (await dogRepository.GetDogByNameAsync(newDog.Name) != null)
             {
-                ModelState.AddModelError("", "The dog with the same name already exists in DB!");
+                ModelState.AddModelError("", $"The dog named {newDog.Name} already exists in DB!");
             }
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var dog = new Dog().FromDTO(dogModel);
+                    var dog = mapper.Map<Dog>(newDog);
                     await dogRepository.CreateDogAsync(dog);
 
                     return Ok("The dog has been created!");

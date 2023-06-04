@@ -26,6 +26,7 @@ namespace Codebridge_Test_REST_API
                 );
                 opt.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             });
+            builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
             var app = builder.Build();
 

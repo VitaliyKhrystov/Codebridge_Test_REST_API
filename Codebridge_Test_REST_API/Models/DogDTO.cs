@@ -1,11 +1,9 @@
-﻿using Codebridge_Test_REST_API.Controllers;
-using Codebridge_Test_REST_API.Validation;
-using Microsoft.AspNetCore.Mvc;
+﻿using Codebridge_Test_REST_API.Validation;
 using System.ComponentModel.DataAnnotations;
 
 namespace Codebridge_Test_REST_API.Models
 {
-    public class DogModel
+    public class DogDTO
     {
         [Required(ErrorMessage = "Enter the name of the dog!")]
         [MinLength(2)]
